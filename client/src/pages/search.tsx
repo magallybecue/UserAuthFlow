@@ -17,8 +17,8 @@ export default function Search() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("all");
   const [hasSearched, setHasSearched] = useState(false);
 
   // Redirect to home if not authenticated
@@ -116,7 +116,7 @@ export default function Search() {
                         <SelectValue placeholder="Todas as categorias" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todas as categorias</SelectItem>
+                        <SelectItem value="all">Todas as categorias</SelectItem>
                         {categories?.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -133,13 +133,13 @@ export default function Search() {
                     <Select 
                       value={selectedSubcategory} 
                       onValueChange={setSelectedSubcategory}
-                      disabled={!selectedCategory}
+                      disabled={!selectedCategory || selectedCategory === 'all'}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Todas as subcategorias" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todas as subcategorias</SelectItem>
+                        <SelectItem value="all">Todas as subcategorias</SelectItem>
                         {subcategories?.map((subcategory) => (
                           <SelectItem key={subcategory.id} value={subcategory.id}>
                             {subcategory.name}
@@ -158,7 +158,7 @@ export default function Search() {
                         <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="active">Ativos</SelectItem>
                         <SelectItem value="inactive">Inativos</SelectItem>
                       </SelectContent>

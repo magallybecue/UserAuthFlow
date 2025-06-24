@@ -161,7 +161,7 @@ export default function FilePreview({ file, onRemove }: FilePreviewProps) {
                     <SelectValue placeholder="Selecione uma coluna..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma</SelectItem>
+                    <SelectItem value="none">Nenhuma</SelectItem>
                     {availableColumns.slice(3).map((column) => (
                       <SelectItem key={column} value={column}>
                         {column}

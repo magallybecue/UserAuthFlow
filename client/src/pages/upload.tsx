@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function Upload() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -26,6 +27,14 @@ export default function Upload() {
       return;
     }
   }, [isAuthenticated, isLoading, toast]);
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+  };
+
+  const handleFileRemove = () => {
+    setSelectedFile(null);
+  };
 
   if (isLoading || !isAuthenticated) {
     return null;
@@ -50,8 +59,11 @@ export default function Upload() {
                 </p>
               </div>
 
-              <FileDropZone />
-              <FilePreview />
+              {!selectedFile ? (
+                <FileDropZone onFileSelect={handleFileSelect} />
+              ) : (
+                <FilePreview file={selectedFile} onRemove={handleFileRemove} />
+              )}
             </CardContent>
           </Card>
         </div>

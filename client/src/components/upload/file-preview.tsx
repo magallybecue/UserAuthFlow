@@ -9,8 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 interface FilePreviewProps {
-  file?: File;
-  onRemove?: () => void;
+  file: File;
+  onRemove: () => void;
 }
 
 export default function FilePreview({ file, onRemove }: FilePreviewProps) {
@@ -20,31 +20,40 @@ export default function FilePreview({ file, onRemove }: FilePreviewProps) {
   const [quantityColumn, setQuantityColumn] = useState("");
   const queryClient = useQueryClient();
 
-  // Mock columns for demo - in real implementation, parse file headers
+  // Sample columns for demonstration
   const availableColumns = [
-    "A - Descrição do Material",
-    "B - Nome do Item", 
-    "C - Produto",
-    "D - Quantidade",
-    "E - Qtd",
-    "F - Volume",
+    "Descrição do Material",
+    "Nome do Item", 
+    "Produto",
+    "Quantidade",
+    "Qtd",
+    "Volume",
   ];
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      return await apiRequest("POST", "/api/uploads", formData);
-    },
-    onSuccess: async (response) => {
-      const upload = await response.json();
+      const response = await fetch('/api/uploads', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // Include cookies for authentication
+      });
       
-      // Start processing
-      await processMutation.mutateAsync({
-        uploadId: upload.id,
-        descriptionColumn,
-        quantityColumn,
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (upload) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/uploads"] });
+      toast({
+        title: "Upload realizado",
+        description: "Arquivo enviado com sucesso!",
       });
     },
     onError: (error) => {
+      console.error('Upload error:', error);
       toast({
         title: "Erro no upload",
         description: "Falha ao enviar o arquivo. Tente novamente.",
@@ -91,10 +100,21 @@ export default function FilePreview({ file, onRemove }: FilePreviewProps) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      // First upload the file
+      const formData = new FormData();
+      formData.append("file", file);
+      const upload = await uploadMutation.mutateAsync(formData);
 
-    uploadMutation.mutate(formData);
+      // Then start processing
+      await processMutation.mutateAsync({
+        uploadId: upload.id,
+        descriptionColumn,
+        quantityColumn: quantityColumn === "none" ? undefined : quantityColumn,
+      });
+    } catch (error) {
+      console.error('Processing failed:', error);
+    }
   };
 
   const formatFileSize = (bytes: number) => {

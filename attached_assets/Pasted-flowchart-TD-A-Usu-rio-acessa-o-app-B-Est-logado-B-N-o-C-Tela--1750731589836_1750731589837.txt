@@ -1,0 +1,162 @@
+flowchart TD
+    A[👤 Usuário acessa o app] --> B{🔐 Está logado?}
+    
+    B -->|Não| C[📝 Tela de Login/Registro]
+    C --> C1[🔑 Login via Gov.br]
+    C --> C2[📧 Cadastro com email]
+    C1 --> D[🏠 Dashboard Principal]
+    C2 --> D
+    
+    B -->|Sim| D
+    
+    D --> E[📊 Visualiza estatísticas pessoais]
+    E --> F[🎯 Escolhe ação principal]
+    
+    F --> G[📤 Novo Upload]
+    F --> H[📋 Histórico de Uploads]
+    F --> I[🔍 Busca Manual]
+    F --> J[⚙️ Configurações]
+    
+    %% Fluxo de Novo Upload
+    G --> G1[📁 Área de Drag & Drop]
+    G1 --> G2{📄 Arquivo válido?}
+    G2 -->|Não| G3[❌ Erro: Formato inválido]
+    G3 --> G1
+    G2 -->|Sim| G4[✅ Preview do arquivo]
+    G4 --> G5[🔍 Mapear colunas]
+    G5 --> G6{📋 Mapeamento OK?}
+    G6 -->|Não| G5
+    G6 -->|Sim| G7[🚀 Iniciar processamento]
+    
+    G7 --> G8[⏳ Tela de processamento]
+    G8 --> G9[📊 Barra de progresso]
+    G9 --> G10[📝 Log em tempo real]
+    G10 --> G11{✅ Processamento concluído?}
+    G11 -->|Não| G9
+    G11 -->|Sim| G12[📈 Estatísticas do resultado]
+    
+    G12 --> R[📋 Tela de Revisão]
+    
+    %% Fluxo de Revisão
+    R --> R1[📊 Dashboard de resultados]
+    R1 --> R2[🔢 Estatísticas: Auto/Manual/Não encontrado]
+    R2 --> R3[🎛️ Filtros e ordenação]
+    R3 --> R4[📋 Tabela interativa]
+    
+    R4 --> R5{🎯 Ação do usuário}
+    R5 --> R6[✅ Aprovar item]
+    R5 --> R7[❌ Rejeitar item]
+    R5 --> R8[🔄 Alterar match]
+    R5 --> R9[🔍 Buscar alternativa]
+    R5 --> R10[📤 Prosseguir para exportação]
+    
+    R6 --> R4
+    R7 --> R4
+    R8 --> R8A[🔍 Modal de busca]
+    R8A --> R8B{🎯 Encontrou material?}
+    R8B -->|Sim| R8C[✅ Confirmar novo match]
+    R8B -->|Não| R8D[❌ Marcar como não encontrado]
+    R8C --> R4
+    R8D --> R4
+    
+    R9 --> R9A[🔍 Busca avançada na base]
+    R9A --> R9B[📋 Lista de sugestões]
+    R9B --> R9C{🎯 Selecionar sugestão?}
+    R9C -->|Sim| R9D[✅ Aplicar match]
+    R9C -->|Não| R9E[🔙 Voltar à revisão]
+    R9D --> R4
+    R9E --> R4
+    
+    %% Fluxo de Exportação
+    R10 --> E1[📋 Tela de exportação]
+    E1 --> E2[👁️ Preview dos dados finais]
+    E2 --> E3[⚙️ Configurar exportação]
+    E3 --> E4[📝 Selecionar colunas]
+    E4 --> E5[📊 Escolher formato: CSV/XLSX]
+    E5 --> E6[⬇️ Gerar e baixar arquivo]
+    E6 --> E7[✅ Confirmação de download]
+    E7 --> E8[💾 Salvar no histórico]
+    E8 --> D
+    
+    %% Fluxo de Histórico
+    H --> H1[📋 Lista de uploads anteriores]
+    H1 --> H2[🔍 Buscar/Filtrar histórico]
+    H2 --> H3{🎯 Ação no histórico}
+    H3 --> H4[👁️ Visualizar detalhes]
+    H3 --> H5[⬇️ Re-download resultado]
+    H3 --> H6[🔄 Reprocessar arquivo]
+    H3 --> H7[🗑️ Excluir upload]
+    
+    H4 --> H4A[📊 Detalhes do processamento]
+    H4A --> H4B[📋 Ver itens processados]
+    H4B --> D
+    
+    H5 --> H5A[⬇️ Download do arquivo]
+    H5A --> D
+    
+    H6 --> G8
+    
+    H7 --> H7A{❓ Confirmar exclusão?}
+    H7A -->|Sim| H7B[🗑️ Item excluído]
+    H7A -->|Não| H1
+    H7B --> H1
+    
+    %% Fluxo de Busca Manual
+    I --> I1[🔍 Campo de busca]
+    I1 --> I2[🎛️ Filtros avançados]
+    I2 --> I3[📋 Categorias/Subcategorias]
+    I3 --> I4[🔍 Executar busca]
+    I4 --> I5[📋 Resultados da busca]
+    I5 --> I6{🎯 Ação nos resultados}
+    I6 --> I7[👁️ Ver detalhes do material]
+    I6 --> I8[⬇️ Exportar resultados]
+    I6 --> I9[🔙 Nova busca]
+    
+    I7 --> I7A[📄 Ficha completa do material]
+    I7A --> I5
+    
+    I8 --> E3
+    
+    I9 --> I1
+    
+    %% Fluxo de Configurações
+    J --> J1[👤 Perfil do usuário]
+    J1 --> J2[📊 Plano atual e uso]
+    J2 --> J3[🔑 Chaves de API]
+    J3 --> J4[📈 Estatísticas de uso]
+    J4 --> J5{⚙️ Configurações}
+    J5 --> J6[🔔 Notificações]
+    J5 --> J7[🎨 Preferências de interface]
+    J5 --> J8[📧 Alterar dados pessoais]
+    J5 --> J9[💳 Gerenciar plano]
+    
+    J6 --> J6A[✅ Salvar preferências]
+    J7 --> J7A[✅ Salvar preferências]
+    J8 --> J8A[✅ Atualizar dados]
+    J9 --> J9A[💳 Tela de pagamento]
+    
+    J6A --> D
+    J7A --> D
+    J8A --> D
+    J9A --> D
+    
+    %% Estados de erro
+    G3 --> G3A[ℹ️ Dicas de formato correto]
+    G3A --> G1
+    
+    %% Notificações do sistema
+    E7 --> N1[🔔 Notificação: Download concluído]
+    G12 --> N2[🔔 Notificação: Processamento finalizado]
+    
+    %% Estilização
+    classDef startEnd fill:#e1f5fe
+    classDef process fill:#f3e5f5
+    classDef decision fill:#fff3e0
+    classDef error fill:#ffebee
+    classDef success fill:#e8f5e8
+    
+    class A,D startEnd
+    class G1,G4,G8,R1,E1,H1,I1,J1 process
+    class B,G2,G6,G11,R5,H3,I6,J5 decision
+    class G3 error
+    class E7,G12 success

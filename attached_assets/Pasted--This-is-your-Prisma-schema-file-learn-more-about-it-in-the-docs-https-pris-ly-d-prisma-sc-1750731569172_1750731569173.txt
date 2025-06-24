@@ -1,0 +1,264 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuários do sistema
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  plan      UserPlan @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  uploads    Upload[]
+  apiKeys    ApiKey[]
+  logs       UserLog[]
+  
+  @@map("users")
+}
+
+enum UserPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// Categorias do CATMAT
+model Category {
+  id          String @id @default(cuid())
+  code        String @unique
+  name        String
+  description String?
+  
+  // Relacionamentos
+  subcategories Subcategory[]
+  materials     Material[]
+  
+  @@map("categories")
+}
+
+// Subcategorias do CATMAT
+model Subcategory {
+  id          String @id @default(cuid())
+  code        String @unique
+  name        String
+  description String?
+  
+  // Relacionamentos
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  materials  Material[]
+  
+  @@map("subcategories")
+}
+
+// Materiais do CATMAT
+model Material {
+  id          String  @id @default(cuid())
+  code        String  @unique // Código CATMAT
+  name        String  // Descrição padronizada
+  unit        String? // Unidade de fornecimento
+  active      Boolean @default(true)
+  
+  // Metadados para busca
+  searchVector String? // Texto otimizado para busca
+  keywords     String[] // Palavras-chave extraídas
+  
+  // Relacionamentos
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id])
+  subcategoryId String?
+  subcategory   Subcategory? @relation(fields: [subcategoryId], references: [id])
+  
+  // Histórico de matches
+  matchedItems MatchedItem[]
+  
+  // Índices para performance
+  @@index([name])
+  @@index([code])
+  @@index([keywords])
+  @@map("materials")
+}
+
+// Uploads de arquivos pelos usuários
+model Upload {
+  id          String      @id @default(cuid())
+  fileName    String
+  originalName String
+  fileSize    Int
+  mimeType    String
+  status      UploadStatus @default(PROCESSING)
+  totalItems  Int?        // Total de itens no arquivo
+  processedItems Int?     // Itens processados
+  
+  // Metadados
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  completedAt DateTime?
+  
+  // Relacionamentos
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  
+  // Itens do upload
+  uploadItems   UploadItem[]
+  matchedItems  MatchedItem[]
+  
+  @@map("uploads")
+}
+
+enum UploadStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Itens individuais de cada upload
+model UploadItem {
+  id           String @id @default(cuid())
+  originalName String // Nome original do material
+  quantity     String? // Quantidade (se fornecida)
+  unit         String? // Unidade (se fornecida)
+  rowNumber    Int    // Linha no arquivo original
+  
+  // Relacionamentos
+  uploadId String
+  upload   Upload @relation(fields: [uploadId], references: [id])
+  
+  // Match resultado
+  matchedItem MatchedItem?
+  
+  @@map("upload_items")
+}
+
+// Resultado do matching entre item original e material CATMAT
+model MatchedItem {
+  id           String      @id @default(cuid())
+  confidenceScore Float    // Score de confiança (0-100)
+  status       MatchStatus @default(PENDING)
+  
+  // Dados do match
+  originalText String      // Texto original
+  matchedText  String?     // Texto padronizado encontrado
+  
+  // Relacionamentos
+  uploadId     String
+  upload       Upload     @relation(fields: [uploadId], references: [id])
+  
+  uploadItemId String     @unique
+  uploadItem   UploadItem @relation(fields: [uploadItemId], references: [id])
+  
+  materialId   String?
+  material     Material?  @relation(fields: [materialId], references: [id])
+  
+  // Histórico de revisão
+  reviewedAt   DateTime?
+  reviewedBy   String?    // User ID que fez a revisão
+  
+  @@map("matched_items")
+}
+
+enum MatchStatus {
+  PENDING      // Aguardando revisão
+  APPROVED     // Aprovado (automático ou manual)
+  REJECTED     // Rejeitado
+  NOT_FOUND    // Não encontrado
+  MANUAL       // Match manual
+}
+
+// Chaves de API para integrações
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String   // Nome da chave
+  key         String   @unique // Chave criptografada
+  active      Boolean  @default(true)
+  lastUsed    DateTime?
+  requestCount Int     @default(0)
+  
+  // Limites
+  dailyLimit  Int      @default(1000)
+  
+  // Relacionamentos
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("api_keys")
+}
+
+// Logs de sincronização com API Compras.gov
+model SyncLog {
+  id            String     @id @default(cuid())
+  status        SyncStatus @default(RUNNING)
+  startedAt     DateTime   @default(now())
+  completedAt   DateTime?
+  
+  // Estatísticas
+  totalRecords  Int?
+  newRecords    Int?
+  updatedRecords Int?
+  deletedRecords Int?
+  errorCount    Int?
+  
+  // Detalhes
+  errorMessage  String?
+  details       Json?      // JSON com detalhes da sincronização
+  
+  @@map("sync_logs")
+}
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+// Logs de atividade dos usuários
+model UserLog {
+  id        String      @id @default(cuid())
+  action    UserAction
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+  
+  // Relacionamentos
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  
+  @@map("user_logs")
+}
+
+enum UserAction {
+  LOGIN
+  LOGOUT
+  UPLOAD_FILE
+  DOWNLOAD_RESULT
+  API_REQUEST
+  PROFILE_UPDATE
+}
+
+// Configurações do sistema
+model SystemConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_config")
+}
